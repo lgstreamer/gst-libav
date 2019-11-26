@@ -373,6 +373,12 @@ else
     emblibav_configure_args="$emblibav_configure_args --enable-gpl"
   fi
 
+  AC_ARG_ENABLE(yasm,
+              [AC_HELP_STRING([--disable-yasm], [disable use of yasm assembler])])
+  if test "x$enable_yasm" = "xno"; then
+    emblibav_configure_args="$emblibav_configure_args --disable-yasm"
+  fi
+
   # if we are cross-compiling, tell libav so
   case $host in
       *android*)
@@ -405,7 +411,7 @@ else
   fi
 
   if test x"$orig_AS" != x; then
-    emblibav_configure_args="$emblibav_configure_args --as=\\\"\\\$orig_AS\\\""
+    emblibav_configure_args="$emblibav_configure_args --as=\\\"\\\$CC\\\""
     export orig_AS
   elif test x"$CC" != x; then
     dnl No external $AS - try $CC for the libav assembler

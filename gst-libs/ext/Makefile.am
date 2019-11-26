@@ -49,7 +49,7 @@ echo "  GEN      $1.la" && \
  echo "library_names=''" && \
  echo "old_library='$1.a'" && \
  echo "inherited_linker_flags=''" && \
- echo "dependency_libs=' -L$(libdir) $(if $2,$(foreach dep,$2,$(abs_builddir)/$(dep).la)) $(call find_library_la,$3 $(LIBM),$(LDFLAGS)) '" && \
+ echo "dependency_libs=' -L $(if $2,$(foreach dep,$2,$(abs_builddir)/$(dep).la)) $(call find_library_la,$3 $(LIBM),$(LDFLAGS)) '" && \
  echo "weak_library_names=''" &&  \
  echo "current=" && \
  echo "age=" && \
@@ -58,7 +58,7 @@ echo "  GEN      $1.la" && \
  echo "shouldnotlink=no" && \
  echo "dlopen=''" && \
  echo "dlpreopen=''" && \
- echo "libdir='$(libdir)'") > $1.la
+ echo "libdir=''") > $1.la
 endef
 
 libavutil.la:

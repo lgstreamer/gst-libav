@@ -945,16 +945,8 @@ gst_ffmpegauddec_register (GstPlugin * plugin)
      * msmpeg4v3 same, as it outperforms divxdec for divx3 playback.
      * VC1/WMV3 are not working and thus unpreferred for now. */
     switch (in_plugin->id) {
-      case AV_CODEC_ID_RA_144:
-      case AV_CODEC_ID_RA_288:
-      case AV_CODEC_ID_COOK:
       case AV_CODEC_ID_AAC:
         rank = GST_RANK_PRIMARY;
-        break;
-        /* SIPR: decoder should have a higher rank than realaudiodec.
-         */
-      case AV_CODEC_ID_SIPR:
-        rank = GST_RANK_SECONDARY;
         break;
       default:
         rank = GST_RANK_MARGINAL;

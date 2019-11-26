@@ -845,41 +845,6 @@ gst_ffmpeg_codecid_to_caps (enum AVCodecID codec_id,
           NULL);
       break;
 
-    case AV_CODEC_ID_RV10:
-    case AV_CODEC_ID_RV20:
-    case AV_CODEC_ID_RV30:
-    case AV_CODEC_ID_RV40:
-    {
-      gint version;
-
-      switch (codec_id) {
-        case AV_CODEC_ID_RV40:
-          version = 4;
-          break;
-        case AV_CODEC_ID_RV30:
-          version = 3;
-          break;
-        case AV_CODEC_ID_RV20:
-          version = 2;
-          break;
-        default:
-          version = 1;
-          break;
-      }
-
-      caps =
-          gst_ff_vid_caps_new (context, NULL, codec_id, encode,
-          "video/x-pn-realvideo", "rmversion", G_TYPE_INT, version, NULL);
-      if (context) {
-        if (context->extradata_size >= 8) {
-          gst_caps_set_simple (caps,
-              "subformat", G_TYPE_INT, GST_READ_UINT32_BE (context->extradata),
-              NULL);
-        }
-      }
-    }
-      break;
-
     case AV_CODEC_ID_MP1:
       /* FIXME: bitrate */
       caps = gst_ff_aud_caps_new (context, NULL, codec_id, encode, "audio/mpeg",
@@ -990,7 +955,7 @@ gst_ffmpeg_codecid_to_caps (enum AVCodecID codec_id,
     case AV_CODEC_ID_LJPEG:
       caps =
           gst_ff_vid_caps_new (context, NULL, codec_id, encode, "image/jpeg",
-          "parsed", G_TYPE_BOOLEAN, TRUE, NULL);
+          NULL);
       break;
 
     case AV_CODEC_ID_JPEG2000:
@@ -2070,51 +2035,6 @@ gst_ffmpeg_codecid_to_caps (enum AVCodecID codec_id,
       caps =
           gst_ff_aud_caps_new (context, NULL, codec_id, encode,
           "audio/x-nellymoser", NULL);
-      break;
-
-    case AV_CODEC_ID_SIPR:
-    {
-      caps =
-          gst_ff_aud_caps_new (context, NULL, codec_id, encode, "audio/x-sipro",
-          NULL);
-      if (context) {
-        gst_caps_set_simple (caps,
-            "leaf_size", G_TYPE_INT, context->block_align,
-            "bitrate", G_TYPE_INT, (guint) context->bit_rate, NULL);
-      }
-    }
-      break;
-
-    case AV_CODEC_ID_RA_144:
-    case AV_CODEC_ID_RA_288:
-    case AV_CODEC_ID_COOK:
-    {
-      gint version = 0;
-
-      switch (codec_id) {
-        case AV_CODEC_ID_RA_144:
-          version = 1;
-          break;
-        case AV_CODEC_ID_RA_288:
-          version = 2;
-          break;
-        case AV_CODEC_ID_COOK:
-          version = 8;
-          break;
-        default:
-          break;
-      }
-
-      /* FIXME: properties? */
-      caps =
-          gst_ff_aud_caps_new (context, NULL, codec_id, encode,
-          "audio/x-pn-realaudio", "raversion", G_TYPE_INT, version, NULL);
-      if (context) {
-        gst_caps_set_simple (caps,
-            "leaf_size", G_TYPE_INT, context->block_align,
-            "bitrate", G_TYPE_INT, (guint) context->bit_rate, NULL);
-      }
-    }
       break;
 
     case AV_CODEC_ID_ROQ_DPCM:
@@ -3284,20 +3204,6 @@ gst_ffmpeg_caps_with_codecid (enum AVCodecID codec_id,
     }
       break;
 
-    case AV_CODEC_ID_COOK:
-    case AV_CODEC_ID_RA_288:
-    case AV_CODEC_ID_RA_144:
-    case AV_CODEC_ID_SIPR:
-    {
-      gint leaf_size;
-      gint bitrate;
-
-      if (gst_structure_get_int (str, "leaf_size", &leaf_size))
-        context->block_align = leaf_size;
-      if (gst_structure_get_int (str, "bitrate", &bitrate))
-        context->bit_rate = bitrate;
-    }
-      break;
     case AV_CODEC_ID_ALAC:
       gst_structure_get_int (str, "samplesize",
           &context->bits_per_coded_sample);
@@ -3417,9 +3323,6 @@ gst_ffmpeg_formatid_to_caps (const gchar * format_name)
         "systemstream", G_TYPE_BOOLEAN, TRUE, NULL);
   } else if (!strcmp (format_name, "mpegts")) {
     caps = gst_caps_new_simple ("video/mpegts",
-        "systemstream", G_TYPE_BOOLEAN, TRUE, NULL);
-  } else if (!strcmp (format_name, "rm")) {
-    caps = gst_caps_new_simple ("application/x-pn-realmedia",
         "systemstream", G_TYPE_BOOLEAN, TRUE, NULL);
   } else if (!strcmp (format_name, "asf")) {
     caps = gst_caps_new_empty_simple ("video/x-ms-asf");
@@ -4132,48 +4035,6 @@ gst_ffmpeg_caps_to_codecid (const GstCaps * caps, AVCodecContext * context)
   } else if (!strcmp (mimetype, "video/x-cinepak")) {
     id = AV_CODEC_ID_CINEPAK;
     video = TRUE;
-  } else if (!strcmp (mimetype, "video/x-pn-realvideo")) {
-    gint rmversion;
-
-    if (gst_structure_get_int (structure, "rmversion", &rmversion)) {
-      switch (rmversion) {
-        case 1:
-          id = AV_CODEC_ID_RV10;
-          break;
-        case 2:
-          id = AV_CODEC_ID_RV20;
-          break;
-        case 3:
-          id = AV_CODEC_ID_RV30;
-          break;
-        case 4:
-          id = AV_CODEC_ID_RV40;
-          break;
-      }
-    }
-    if (id != AV_CODEC_ID_NONE)
-      video = TRUE;
-  } else if (!strcmp (mimetype, "audio/x-sipro")) {
-    id = AV_CODEC_ID_SIPR;
-    audio = TRUE;
-  } else if (!strcmp (mimetype, "audio/x-pn-realaudio")) {
-    gint raversion;
-
-    if (gst_structure_get_int (structure, "raversion", &raversion)) {
-      switch (raversion) {
-        case 1:
-          id = AV_CODEC_ID_RA_144;
-          break;
-        case 2:
-          id = AV_CODEC_ID_RA_288;
-          break;
-        case 8:
-          id = AV_CODEC_ID_COOK;
-          break;
-      }
-    }
-    if (id != AV_CODEC_ID_NONE)
-      audio = TRUE;
   } else if (!strcmp (mimetype, "video/x-rle")) {
     const gchar *layout;
 
